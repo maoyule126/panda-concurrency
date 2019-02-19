@@ -58,9 +58,9 @@ public class TaskPool extends Disposer {
      * @param sThreadName
      * @return
      */
-    private static ExecutorService newFixedThreadPool(int threadCount,
+    private static MyThreadPoolExecutor newFixedThreadPool(int threadCount,
                                                       String sThreadName) {
-        return new ThreadPoolExecutor(threadCount, threadCount, 0L,
+        return new MyThreadPoolExecutor(threadCount, threadCount, 0L,
                 TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
                 new MyThreadFactory(sThreadName), new ThreadPoolExecutor.AbortPolicy());
     }
@@ -79,5 +79,15 @@ public class TaskPool extends Disposer {
      */
     public void submit(Runnable runnable) {
         taskService.submit(runnable);
+    }
+
+    /**
+     * 停止某个线程，强烈建议仅在发现死锁时调用
+     * @param threadName
+     */
+    public void stopThread(String threadName){
+        if(taskService instanceof MyThreadPoolExecutor){
+            ((MyThreadPoolExecutor)taskService).stopThread(threadName);
+        }
     }
 }
