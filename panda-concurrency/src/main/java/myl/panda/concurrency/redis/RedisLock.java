@@ -1,19 +1,18 @@
 package myl.panda.concurrency.redis;
 
+import myl.panda.concurrency.clouds.ICloudLock;
 import myl.panda.utils.RedisLockUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.Assert;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 
 /**
  * redis分布式锁
  * create by maoyule on 2019/1/12
  */
-public class RedisLock implements Lock {
+public class RedisLock implements ICloudLock {
     private static final Duration DEFAULT_EXPIRE_TIME = Duration.ofSeconds(10);
     private static final long SLEEP_TIME = 20;
 
@@ -117,13 +116,8 @@ public class RedisLock implements Lock {
         }
     }
 
+    @Override
     public boolean isLock(){
         return isLock;
-    }
-
-    @Override
-    public Condition newCondition() {
-        // unrealized
-        return null;
     }
 }
