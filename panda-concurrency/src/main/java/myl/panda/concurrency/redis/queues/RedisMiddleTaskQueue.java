@@ -1,10 +1,11 @@
-package myl.panda.concurrency.redis;
+package myl.panda.concurrency.redis.queues;
 
 import com.alibaba.fastjson.JSON;
 import myl.panda.concurrency.BaseTaskFactory;
 import myl.panda.concurrency.clouds.ICloudLock;
 import myl.panda.concurrency.pools.TaskPool;
 import myl.panda.concurrency.queues.AbstractTaskQueue;
+import myl.panda.concurrency.redis.RedisLock;
 import myl.panda.concurrency.redis.tasks.RedisTask;
 import myl.panda.utils.RedisLockUtils;
 import org.slf4j.Logger;
@@ -17,38 +18,24 @@ import java.util.concurrent.TimeUnit;
 /**
  * create by maoyule on 2019/1/12
  */
-public abstract class RedisTaskQueue extends AbstractTaskQueue {
+public abstract class RedisMiddleTaskQueue extends AbstractRedisTaskQueue {
     private static final long EXPIRE_TIME = 30 * 60;
     private static final long LOCAL_RUN_ONCE_TIMES = 5000L;
 
     private static final Logger logger = LoggerFactory.getLogger(Logger.class);
 
-    private ICloudLock lock;
-    private String listKey;
-    private StringRedisTemplate template;
-    private boolean isRunning = true;
-
-    public RedisTaskQueue(String listKey) {
+    public RedisMiddleTaskQueue(String listKey) {
         this(BaseTaskFactory.getFactory().getMainPool(), listKey);
     }
 
-    public RedisTaskQueue(TaskPool taskPool, String listKey) {
-        super(taskPool);
-        this.listKey = listKey;
-        this.template = RedisLockUtils.getRedisTemplate();
-        Assert.notNull(template, "redis template is null");
-        this.lock = new RedisLock(listKey + "_lock");
+    public RedisMiddleTaskQueue(TaskPool taskPool, String listKey) {
+        super(taskPool, listKey);
     }
 
     @Override
     protected void preInit() {
-
-    }
-
-    protected void execute() {
-        while (true) {
-            String event = this.template.opsForList().leftPop(listKey);
-        }
+        super.preInit();
+        this.lock = new RedisLock(listKey + "_lock");
     }
 
     @Override
@@ -104,7 +91,7 @@ public abstract class RedisTaskQueue extends AbstractTaskQueue {
         }
     }
 
-    private void runAllRedisTasks() {
+    protected void runAllRedisTasks() {
         while (isRunning) {
             String taskStr = this.template.opsForList().leftPop(listKey);
             if (taskStr == null) {
@@ -115,7 +102,7 @@ public abstract class RedisTaskQueue extends AbstractTaskQueue {
         }
     }
 
-    private void addAllTasksToRedis() {
+    protected void addAllTasksToRedis() {
         this.template.expire(listKey, EXPIRE_TIME, TimeUnit.SECONDS);
         while (isRunning) {
             try {
@@ -133,7 +120,7 @@ public abstract class RedisTaskQueue extends AbstractTaskQueue {
         }
     }
 
-    private void addTaskToRedis(RedisTask task) {
+    protected void addTaskToRedis(RedisTask task) {
         this.template.expire(listKey, EXPIRE_TIME, TimeUnit.SECONDS);
         try {
             String taskStr = encodeTask(task);
@@ -145,7 +132,7 @@ public abstract class RedisTaskQueue extends AbstractTaskQueue {
         }
     }
 
-    private RedisTask decodeTask(String taskStr) {
+    protected RedisTask decodeTask(String taskStr) {
         int index = taskStr.indexOf(":");
         if (index == -1) {
             logger.error("can not find taskId, taskStr:{}", taskStr);
@@ -164,7 +151,7 @@ public abstract class RedisTaskQueue extends AbstractTaskQueue {
 
     protected abstract Class<RedisTask> getTaskClass(int taskId);
 
-    private String encodeTask(RedisTask task) {
+    protected String encodeTask(RedisTask task) {
         try {
             String taskJson = JSON.toJSONString(task);
             return task.getTaskId() + ":" + taskJson;

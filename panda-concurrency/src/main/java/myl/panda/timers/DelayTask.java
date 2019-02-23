@@ -1,6 +1,6 @@
 package myl.panda.timers;
 
-import myl.panda.concurrency.queues.TaskQueue;
+import myl.panda.concurrency.queues.ITaskQueue;
 
 /**
  * 延时执行，只执行一次
@@ -11,7 +11,7 @@ public abstract class DelayTask extends LoopTask {
         super(null, delayTime, 1);
     }
 
-    public DelayTask(TaskQueue queue, int delayTime){
-        super(null, delayTime, 1);
+    public DelayTask(ITaskQueue queue, int delayTime){
+        super(queue, delayTime, 1);
     }
 }

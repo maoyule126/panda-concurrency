@@ -1,13 +1,12 @@
 package myl.panda.timers;
 
 import myl.panda.concurrency.BaseTaskFactory;
-import myl.panda.concurrency.queues.TaskQueue;
+import myl.panda.concurrency.queues.ITaskQueue;
 import myl.panda.concurrency.tasks.AbstractTask;
 
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * create by maoyule on 2019/1/9
@@ -23,8 +22,8 @@ public abstract class LoopTask extends AbstractTask implements Delayed {
         this(null, delayTime, loopCount);
     }
 
-    public LoopTask(TaskQueue queue, int delayTime){
-        this(null, delayTime, 0);
+    public LoopTask(ITaskQueue queue, int delayTime){
+        this(queue, delayTime, 0);
     }
 
     /**
@@ -32,7 +31,7 @@ public abstract class LoopTask extends AbstractTask implements Delayed {
      * @param delayTime 单位 ms
      * @param loopCount 循环次数 小于等于0表示无限循环
      */
-    public LoopTask(TaskQueue queue, int delayTime, int loopCount){
+    public LoopTask(ITaskQueue queue, int delayTime, int loopCount){
         this.queue = queue;
         this.delayTime = delayTime;
         this.expireTime = System.currentTimeMillis() + this.delayTime;

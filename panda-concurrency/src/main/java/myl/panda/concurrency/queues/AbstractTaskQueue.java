@@ -58,21 +58,30 @@ public abstract class AbstractTaskQueue implements ITaskQueue {
     protected abstract void doRun();
 
     private void addToRun() {
-        if(lock.tryLock()){
+        while (true) {
+            boolean ret;
             try {
-                if (isAdded == false) {
-                    try {
-                        taskPool.add(this);
-                        isAdded = true;
-                    } catch (Exception e) {
-                        logger.error("", e);
-                    }
+                ret = lock.tryLock(1L, TimeUnit.SECONDS);
+                if (ret) {
+                    break;
                 }
-            } catch (Exception e) {
-                logger.error("", e);
-            } finally {
-                lock.unlock();
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
             }
+        }
+        try {
+            if (isAdded == false) {
+                try {
+                    taskPool.add(this);
+                    isAdded = true;
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("", e);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -85,7 +94,7 @@ public abstract class AbstractTaskQueue implements ITaskQueue {
                     break;
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
             }
         }
         try {

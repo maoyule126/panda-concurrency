@@ -7,6 +7,8 @@ import org.springframework.util.Assert;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 /**
  * redis分布式锁
